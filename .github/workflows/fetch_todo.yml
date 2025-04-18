@@ -1,8 +1,10 @@
-# .github/workflows/fetch_todo.yml
 name: Fetch Todo JSON
 
+permissions: # ←⭐ 반드시 추가
+  contents: write
+
 on:
-  push: {}
+  push:
   schedule:
     - cron: "*/5 * * * *"
 
@@ -11,40 +13,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1) 이 단계에서 GITHUB_TOKEN을 비활성화하고 PAT만 사용하도록 설정
-      - name: Checkout with PAT
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.ACTIONS_TOKEN }} # 여러분이 등록한 PAT
-          persist-credentials: false # GITHUB_TOKEN 끄기
-          fetch-depth: 0
+          fetch-depth: 0 # 커밋 히스토리 보존
 
-      # 2) Python 환경 준비
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
-          python-version: "3.x"
+          python-version: 3.x
 
-      # 3) requests 설치
-      - name: Install requests
-        run: pip install requests
+      - run: pip install requests
 
-      # 4) API 호출 스크립트 실행
-      - name: Run fetch_todo script
-        run: python scripts/fetch_todo.py
+      - run: python scripts/fetch_todo.py
 
-      # 5) 커밋
-      - name: Commit changes
+      - name: Commit and push
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add test.json
-          git commit -m "Auto-update test.json via GitHub Action" || echo "No changes to commit"
-
-      # 6) 원격 URL을 PAT 포함 형태로 바꿔서 푸시
-      - name: Push changes
-        env:
-          PAT: ${{ secrets.ACTIONS_TOKEN }}
-        run: |
-          git remote set-url origin https://x-access-token:${PAT}@github.com/${{ github.repository }}.git
+          git commit -m "Auto-update test.json via GitHub Action" || echo "No changes"
           git push origin master

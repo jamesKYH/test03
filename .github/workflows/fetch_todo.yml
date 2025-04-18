@@ -1,3 +1,4 @@
+# .github/workflows/fetch_todo.yml
 name: Fetch Todo JSON
 
 on:
@@ -10,26 +11,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      # 1) Checkout the repo using your PAT so subsequent git push uses it
+      - name: Checkout repository with PAT
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.ACTIONS_TOKEN }}
+          fetch-depth: 0
 
+      # 2) Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.x"
 
+      # 3) Install dependencies
       - name: Install requests
         run: pip install requests
 
+      # 4) Run your fetch script
       - name: Run fetch_todo script
         run: python scripts/fetch_todo.py
 
+      # 5) Commit & push the updated JSON back to the same branch
       - name: Commit and push test.json
-        env:
-          TOKEN: ${{ secrets.ACTIONS_TOKEN }}
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add test.json
           git commit -m "Auto-update test.json via GitHub Action" || echo "No changes to commit"
-          git push https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git HEAD:master
+          git push origin master

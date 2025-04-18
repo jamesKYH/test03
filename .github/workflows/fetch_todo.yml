@@ -26,7 +26,7 @@ jobs:
 
       - name: Commit and push test.json
         env:
-          TOKEN: ${{ secrets.ACTIONS_TOKEN }} # ← GitHub에 등록한 토큰을 참조
+          TOKEN: ${{ secrets.ACTIONS_TOKEN }}
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"

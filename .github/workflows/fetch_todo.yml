@@ -11,32 +11,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Checkout the repo using your PAT so subsequent git push uses it
-      - name: Checkout repository with PAT
+      # 1) 기본 GITHUB_TOKEN 비활성화 → 빈 상태로 checkout
+      - name: Checkout repository (no credentials)
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.ACTIONS_TOKEN }}
+          persist-credentials: false
           fetch-depth: 0
 
-      # 2) Set up Python
+      # 2) Python 환경 구성
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.x"
 
-      # 3) Install dependencies
-      - name: Install requests
+      # 3) 의존성 설치
+      - name: Install dependencies
         run: pip install requests
 
-      # 4) Run your fetch script
-      - name: Run fetch_todo script
+      # 4) API 호출 스크립트 실행
+      - name: Run fetch_todo.py
         run: python scripts/fetch_todo.py
 
-      # 5) Commit & push the updated JSON back to the same branch
+      # 5) commit & push (PAT 사용)
       - name: Commit and push test.json
+        env:
+          ACTIONS_TOKEN: ${{ secrets.ACTIONS_TOKEN }}
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add test.json
           git commit -m "Auto-update test.json via GitHub Action" || echo "No changes to commit"
+          # 원격 URL을 PAT 포함 버전으로 변경
+          git remote set-url origin https://x-access-token:${ACTIONS_TOKEN}@github.com/${{ github.repository }}.git
+          # master 브랜치에 푸시
           git push origin master

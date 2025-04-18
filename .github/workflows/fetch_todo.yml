@@ -3,7 +3,7 @@ name: Fetch Todo JSON
 on:
   push:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: "*/5 * * * *"
 
 jobs:
   fetch-and-save:
@@ -16,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
       - name: Install requests
         run: pip install requests
@@ -25,9 +25,11 @@ jobs:
         run: python scripts/fetch_todo.py
 
       - name: Commit and push test.json
+        env:
+          TOKEN: ${{ secrets.ACTIONS_TOKEN }} # ← GitHub에 등록한 토큰을 참조
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add test.json
           git commit -m "Auto-update test.json via GitHub Action" || echo "No changes to commit"
-          git push
+          git push https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git HEAD:main
